@@ -63,3 +63,12 @@ EKKSINECDLKGKKVLIRVDFNVPVKNGKITNDYRIRSALPTLKKVLTEGGSCVLMSHLGRPKGIPMAQAGKIRSTGGVP
 154l,8
 16pk,
 ```
+
+### bibliography
+
+webpages:
+
+[一文极速读懂 Gene Ontology （GO）数据库](https://zhuanlan.zhihu.com/p/99789859)
+
+articles:
+see `./bib`
