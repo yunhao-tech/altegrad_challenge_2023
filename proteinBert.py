@@ -7,21 +7,20 @@ Original file is located at
     https://colab.research.google.com/drive/1F-vRTaO6bmHx0kzrdST3cVj-QqvoR_-b
 """
 
-# ! pip install autogluon
-
-# ! pip install biovec
-
-! pip install protein-bert
-
-# Commented out IPython magic to ensure Python compatibility.
-# %cd drive/MyDrive/altegrad
-
+from autogluon.tabular import TabularPredictor
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA, TruncatedSVD
+import scipy.sparse as sp
+import pickle
+from proteinbert.conv_and_global_attention_model import get_model_with_hidden_layers_as_outputs
+from proteinbert import OutputType, OutputSpec, FinetuningModelGenerator, load_pretrained_model, finetune, evaluate_by_len
+from sklearn.model_selection import train_test_split
+from tensorflow import keras
+from IPython.display import display
+import os
 import csv
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, log_loss
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
 
 # Read sequences
 sequences = list()
@@ -35,7 +34,7 @@ sequences_test = list()
 proteins_test = list()
 y_train = list()
 with open('graph_labels.txt', 'r') as f:
-    for i,line in enumerate(f):
+    for i, line in enumerate(f):
         t = line.split(',')
         if len(t[1][:-1]) == 0:
             proteins_test.append(t[0])
@@ -50,19 +49,7 @@ train_set['label'] = y_train
 test_set = pd.DataFrame()
 test_set['seq'] = sequences_test
 
-train_set.head()
 
-import os
-
-import pandas as pd
-from IPython.display import display
-
-from tensorflow import keras
-
-from sklearn.model_selection import train_test_split
-
-from proteinbert import OutputType, OutputSpec, FinetuningModelGenerator, load_pretrained_model, finetune, evaluate_by_len
-from proteinbert.conv_and_global_attention_model import get_model_with_hidden_layers_as_outputs
 # A local (non-global) bianry output
 OUTPUT_TYPE = OutputType(False, 'categorical')
 UNIQUE_LABELS = np.unique(train_set['label'])
@@ -70,97 +57,108 @@ OUTPUT_SPEC = OutputSpec(OUTPUT_TYPE, UNIQUE_LABELS)
 
 """### finetune"""
 
-# Loading the dataset
+# # Loading the dataset
 
-# train_set_file_path = os.path.join(BENCHMARKS_DIR, '%s.train.csv' % BENCHMARK_NAME)
-# train_set = pd.read_csv(train_set_file_path).dropna().drop_duplicates()
-train_set, valid_set = train_test_split(train_set, stratify = train_set['label'], test_size = 0.1, random_state = 0)
+# # train_set_file_path = os.path.join(BENCHMARKS_DIR, '%s.train.csv' % BENCHMARK_NAME)
+# # train_set = pd.read_csv(train_set_file_path).dropna().drop_duplicates()
+# train_set, valid_set = train_test_split(train_set, stratify = train_set['label'], test_size = 0.1, random_state = 0)
 
-# test_set_file_path = os.path.join(BENCHMARKS_DIR, '%s.test.csv' % BENCHMARK_NAME)
-# test_set = pd.read_csv(test_set_file_path).dropna().drop_duplicates()
+# # test_set_file_path = os.path.join(BENCHMARKS_DIR, '%s.test.csv' % BENCHMARK_NAME)
+# # test_set = pd.read_csv(test_set_file_path).dropna().drop_duplicates()
 
-print(f'{len(train_set)} training set records, {len(valid_set)} validation set records, {len(test_set)} test set records.')
-
-
-# Loading the pre-trained model and fine-tuning it on the loaded dataset
-
-pretrained_model_generator, input_encoder = load_pretrained_model('./trained_models','epoch_92400_sample_23500000.pkl')
-
-# get_model_with_hidden_layers_as_outputs gives the model output access to the hidden layers (on top of the output)
-model_generator = FinetuningModelGenerator(pretrained_model_generator, OUTPUT_SPEC, pretraining_model_manipulation_function = \
-        get_model_with_hidden_layers_as_outputs, dropout_rate = 0.5)
-
-training_callbacks = [
-    keras.callbacks.ReduceLROnPlateau(patience = 1, factor = 0.25, min_lr = 1e-05, verbose = 1),
-    keras.callbacks.EarlyStopping(patience = 2, restore_best_weights = True),
-]
-
-finetune(model_generator, input_encoder, OUTPUT_SPEC, train_set['seq'], train_set['label'], valid_set['seq'], valid_set['label'], \
-        seq_len = 512, batch_size = 32, max_epochs_per_stage = 40, lr = 1e-04, begin_with_frozen_pretrained_layers = True, \
-        lr_with_frozen_pretrained_layers = 1e-02, n_final_epochs = 1, final_seq_len = 1024, final_lr = 1e-05, callbacks = training_callbacks)
+# print(f'{len(train_set)} training set records, {len(valid_set)} validation set records, {len(test_set)} test set records.')
 
 
-# Evaluating the performance on the test-set
+# # Loading the pre-trained model and fine-tuning it on the loaded dataset
 
-# results, confusion_matrix = evaluate_by_len(model_generator, input_encoder, OUTPUT_SPEC, test_set['seq'], test_set['label'], \
-        # start_seq_len = 512, start_batch_size = 32)
+# pretrained_model_generator, input_encoder = load_pretrained_model('./trained_models','epoch_92400_sample_23500000.pkl')
 
-# print('Test-set performance:')
-# display(results)
+# # get_model_with_hidden_layers_as_outputs gives the model output access to the hidden layers (on top of the output)
+# model_generator = FinetuningModelGenerator(pretrained_model_generator, OUTPUT_SPEC, pretraining_model_manipulation_function = \
+#         get_model_with_hidden_layers_as_outputs, dropout_rate = 0.5)
 
-# print('Confusion matrix:')
-# display(confusion_matrix)
+# training_callbacks = [
+#     keras.callbacks.ReduceLROnPlateau(patience = 1, factor = 0.25, min_lr = 1e-05, verbose = 1),
+#     keras.callbacks.EarlyStopping(patience = 2, restore_best_weights = True),
+# ]
 
-type(pretrained_model_generator)
+# finetune(model_generator, input_encoder, OUTPUT_SPEC, train_set['seq'], train_set['label'], valid_set['seq'], valid_set['label'], \
+#         seq_len = 512, batch_size = 32, max_epochs_per_stage = 40, lr = 1e-04, begin_with_frozen_pretrained_layers = True, \
+#         lr_with_frozen_pretrained_layers = 1e-02, n_final_epochs = 1, final_seq_len = 1024, final_lr = 1e-05, callbacks = training_callbacks)
 
-type(model_generator)
 
-from proteinbert.conv_and_global_attention_model import get_model_with_hidden_layers_as_outputs
+# # Evaluating the performance on the test-set
 
-model.outputs[0].shape
+# # results, confusion_matrix = evaluate_by_len(model_generator, input_encoder, OUTPUT_SPEC, test_set['seq'], test_set['label'], \
+#         # start_seq_len = 512, start_batch_size = 32)
 
-"""### predict"""
+# # print('Test-set performance:')
+# # display(results)
 
-import pickle
+# # print('Confusion matrix:')
+# # display(confusion_matrix)
 
-# with open('finetuned_model_weights.pkl', 'wb') as f:
-#   pickle.dump(model_generator.model_weights, f)
+# type(pretrained_model_generator)
 
-# unpickling the weights
-with open('./trained_models/finetuned_model_weights.pkl', 'rb') as f:
-    saved_model_weights = pickle.load(f)
+# type(model_generator)
 
-saved_pretrained_model_generator, saved_input_encoder = load_pretrained_model(local_model_dump_dir='./trained_models/', 
-                                        local_model_dump_file_name= "epoch_92400_sample_23500000.pkl",)
-saved_model_generator = FinetuningModelGenerator(saved_pretrained_model_generator, OUTPUT_SPEC, 
-                                           pretraining_model_manipulation_function = get_model_with_hidden_layers_as_outputs, 
-                                           dropout_rate = 0.5,
-                                            model_weights = saved_model_weights,)
+# from proteinbert.conv_and_global_attention_model import get_model_with_hidden_layers_as_outputs
 
-model = saved_model_generator.create_model(seq_len=1024)
+# model.outputs[0].shape
 
-X_train = saved_input_encoder.encode_X(train_set['seq'],1024)
+# """### predict"""
 
-X_train
+# import pickle
 
-X_test = saved_input_encoder.encode_X(test_set['seq'], 1024)
+# # with open('finetuned_model_weights.pkl', 'wb') as f:
+# #   pickle.dump(model_generator.model_weights, f)
 
-y_pred_proba = model.predict(X_test, batch_size=32)
+# # unpickling the weights
+# with open('./trained_models/finetuned_model_weights.pkl', 'rb') as f:
+#     saved_model_weights = pickle.load(f)
+
+# saved_pretrained_model_generator, saved_input_encoder = load_pretrained_model(local_model_dump_dir='./trained_models/',
+#                                         local_model_dump_file_name= "epoch_92400_sample_23500000.pkl",)
+# saved_model_generator = FinetuningModelGenerator(saved_pretrained_model_generator, OUTPUT_SPEC,
+#                                            pretraining_model_manipulation_function = get_model_with_hidden_layers_as_outputs,
+#                                            dropout_rate = 0.5,
+#                                             model_weights = saved_model_weights,)
+
+# model = saved_model_generator.create_model(seq_len=1024)
+
+# X_train = saved_input_encoder.encode_X(train_set['seq'],1024)
+
+# X_train
+
+# X_test = saved_input_encoder.encode_X(test_set['seq'], 1024)
+
+# y_pred_proba = model.predict(X_test, batch_size=32)
 
 """### embedding"""
 
-train_set['seq']
-
 seq_len = 1024
-pretrained_model_generator, input_encoder = load_pretrained_model('./trained_models','epoch_92400_sample_23500000.pkl')
-model = get_model_with_hidden_layers_as_outputs(pretrained_model_generator.create_model(seq_len))
+pretrained_model_generator, input_encoder = load_pretrained_model(
+    './trained_models', 'epoch_92400_sample_23500000.pkl')
+model = get_model_with_hidden_layers_as_outputs(
+    pretrained_model_generator.create_model(seq_len))
 X_train = input_encoder.encode_X(sequences_train, seq_len)
 X_test = input_encoder.encode_X(sequences_test, seq_len)
 
-model.summary()
 
-train_embedding,_ = model.predict(X_train, 32)
-test_embedding,_ = model.predict(X_test, 32)
+train_embedding, train_global_embedding = model.predict(X_train, 32)
+with open('train_embedding', 'wb') as f:
+    pickle.dump(train_embedding, f)
+
+with open('train_global_embedding', 'wb') as f:
+    pickle.dump(train_global_embedding, f)
+test_embedding, test_global_embedding = model.predict(X_test, 32)
+
+with open('test_embedding', 'wb') as f:
+    pickle.dump(test_embedding, f)
+
+with open('test_global_embedding', 'wb') as f:
+    pickle.dump(test_global_embedding, f)
+
 
 """### legacy"""
 
@@ -187,28 +185,24 @@ test_embedding,_ = model.predict(X_test, 32)
 
 X_train.shape, X_test.shape
 
-import scipy.sparse as sp
 # X = np.vstack((X_train.toarray(), X_test.toarray()))
 X = np.vstack((X_train, X_test))
 X.shape
 
 X_sparse = sp.csr_matrix(X)
-from sklearn.decomposition import PCA, TruncatedSVD
 # pca = PCA()
 # pca.fit(X)
 svd = TruncatedSVD(n_components=100)
 svd.fit(X)
 
-import matplotlib.pyplot as plt
 plt.plot(svd.explained_variance_ratio_)
 
 X_new = svd.transform(X)
 
-X_train_new,X_test_new = np.split(X_new,[X_train.shape[0]])
+X_train_new, X_test_new = np.split(X_new, [X_train.shape[0]])
 
 X_train_new.shape, X_test_new.shape
 
-import pandas as pd
 df_train = pd.DataFrame(X_train_new)
 
 df_test = pd.DataFrame(X_test_new)
@@ -217,7 +211,7 @@ df_train.columns = range(df_train.shape[1])
 
 df_train.head()
 
-np.unique(y_train,return_counts=True)
+np.unique(y_train, return_counts=True)
 
 df_train['class'] = y_train
 
@@ -225,8 +219,8 @@ df_train.head()
 
 """### automl"""
 
-from autogluon.tabular import TabularPredictor
-predictor = TabularPredictor(label='class', eval_metric='log_loss').fit(df_train)
+predictor = TabularPredictor(
+    label='class', eval_metric='log_loss').fit(df_train)
 
 predictor.leaderboard()
 
@@ -246,7 +240,6 @@ with open('proteinBert_finetuning_log_loss_refit_full.csv', 'w') as csvfile:
     lst.insert(0, "name")
     writer.writerow(lst)
     for i, protein in enumerate(proteins_test):
-        lst = y_pred_proba[i,:].tolist()
+        lst = y_pred_proba[i, :].tolist()
         lst.insert(0, protein)
         writer.writerow(lst)
-
