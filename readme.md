@@ -69,6 +69,7 @@ EKKSINECDLKGKKVLIRVDFNVPVKNGKITNDYRIRSALPTLKKVLTEGGSCVLMSHLGRPKGIPMAQAGKIRSTGGVP
 webpages:
 
 [一文极速读懂 Gene Ontology （GO）数据库](https://zhuanlan.zhihu.com/p/99789859)
+[ICLR'22| 基于知识图谱的蛋白质预训练框架](https://zhuanlan.zhihu.com/p/463331534)
 
 articles:
 see `./bib`
