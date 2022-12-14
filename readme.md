@@ -71,5 +71,24 @@ webpages:
 [一文极速读懂 Gene Ontology （GO）数据库](https://zhuanlan.zhihu.com/p/99789859)
 [ICLR'22| 基于知识图谱的蛋白质预训练框架](https://zhuanlan.zhihu.com/p/463331534)
 
-articles:
-see `./bib`
+important articles:
+
+- ProteinBERT a universal deep-learning model of protein
+- Deep Dive into Machine Learning Models for Protein Engineering
+
+```
+bibs
+┣ alpha
+┃ ┗ Highly accurate protein structure prediction with alphafold.pdf
+┣ embedding
+┃ ┣ Application of Sequence Embedding in Protein Sequence-Based Predictions.pdf
+┃ ┣ OntoProtein Protein Pretraining With Gene Ontology Embedding.pdf
+┃ ┗
+┣ esm
+┃ ┣ Evolutionary-scale prediction of atomic level protein structure.pdf
+┃ ┗ Transformer protein language models are unsupervised structure learners.pdf
+┗ general
+┃ ┣
+┃ ┣ Deep Learning for Genomics A Concise Overview.pdf
+┃ ┗ Recent Advances in the Prediction of Protein Structural Classe.pdf
+```
