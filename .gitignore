@@ -1,9 +1,11 @@
 # */*.pdf
-**/*.pt
-**/*data
+# **/*.pt
+**/data/raw
 **/*datasets
 **/*.txt
-
+**/*.csv
+**/embedding
+**/model
 **/*.zip
 #######
 *checkpoint*
