@@ -44,20 +44,26 @@ with open('graph_labels.txt', 'r') as f:
 """### embedding"""
 
 with open('./embedding/train_global_embedding', 'rb') as f:
-    X_train = pickle.load(f)
+    X_train_sequencial_embedding = pickle.load(f)
 with open('./embedding/test_global_embedding', 'rb') as f:
-    X_test = pickle.load(f)
+    X_test_sequencial_embedding = pickle.load(f)
 
+with open('./embedding/train_structrual_embedding', 'rb') as f:
+    X_train_structrual_embedding= pickle.load(f)
+with open('./embedding/test_structrual_embedding', 'rb') as f:
+    X_test_structrual_embedding= pickle.load(f)
+
+X_train = np.concatenate((X_train_sequencial_embedding, X_train_structrual_embedding), axis=1)
+X_test = np.concatenate((X_test_sequencial_embedding, X_test_structrual_embedding), axis=1)
 """### dimension reduction"""
-
-X_train.shape, X_test.shape
+print(X_train.shape, X_test.shape)
 
 # X = np.vstack((X_train.toarray(), X_test.toarray()))
 X = np.vstack((X_train, X_test))
 X.shape
 
 X_sparse = sp.csr_matrix(X)
-svd = TruncatedSVD(n_components=100)
+svd = TruncatedSVD(n_components=300)
 svd.fit(X)
 
 X_new = svd.transform(X)
@@ -85,7 +91,7 @@ y_pred_proba = predict_proba.to_numpy()
 
 """### write"""
 
-with open('proteinBert_pretrained_100_dim_automl_log_loss_refit_full.csv', 'w') as csvfile:
+with open('proteinBert_pretrained_300_dim_automl_log_loss_refit_full.csv', 'w') as csvfile:
     writer = csv.writer(csvfile, delimiter=',')
     lst = list()
     for i in range(18):
