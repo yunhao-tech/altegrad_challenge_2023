@@ -92,3 +92,14 @@ bibs
 ┃ ┣ Deep Learning for Genomics A Concise Overview.pdf
 ┃ ┗ Recent Advances in the Prediction of Protein Structural Classe.pdf
 ```
+
+### 基本思路
+
+基本流程是：特征提取、特征筛选（降维）、分类。特征提取的话分别考虑序列信息和结构信息，序列信息用预训练模型（参见 bib，这个基本不用自己做），结构信息用图神经网络（也可以用简单的图特征提取方法，比如 graph kernel 啥的），提取的特征最后放到分类器里（这个没得说 autogluon 天下无敌）。不过为了更快判断特征提取的优劣，没必要次次调用 autogluon，可以先用最简单的两层 mlp 试试（就接在 gnn 的后面作为一个分类 head）看看和基线区别怎么样，好的话再用 autogluon，这样可以快速排除表现不好的模型。
+
+先考虑单独使用序列信息或结构信息的最好效果
+
+只使用序列信息：目前最好效果是 proteinBert + TruncatedSVM 100 dim + autogluon， 这方面应该到极限了，进步方向就是找更好的预训练模型代替 proteinBert 提取序列 embedding（ESM 不如 proteinBert）
+只使用结构信息：目前只使用了节点特征，做消息传递，最后聚合为图特征，效果与基线差别不大。改进方向按顺序：1.考虑更有层次性的聚合方式（求和聚合太扁平，会损失很多信息） 2. 用 soat 的图神经网络（与 1 有部分重合）3.加入边特征
+
+最后可以考虑将两种信息合并训练一个分类器。
