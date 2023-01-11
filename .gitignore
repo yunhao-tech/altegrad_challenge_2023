@@ -7,6 +7,7 @@
 **/embedding
 *.pkl
 **/*.zip
+**/model/ag-20221214_155718
 #######
 *checkpoint*
 

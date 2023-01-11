@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1F-vRTaO6bmHx0kzrdST3cVj-QqvoR_-b
 """
 
-from autogluon.tabular import TabularPredictor
+# from autogluon.tabular import TabularPredictor
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA, TruncatedSVD
 import scipy.sparse as sp
@@ -138,28 +138,33 @@ OUTPUT_SPEC = OutputSpec(OUTPUT_TYPE, UNIQUE_LABELS)
 
 seq_len = 1024
 pretrained_model_generator, input_encoder = load_pretrained_model(
-    './trained_models', 'epoch_92400_sample_23500000.pkl')
+    './model', 'epoch_92400_sample_23500000.pkl')
 model = get_model_with_hidden_layers_as_outputs(
     pretrained_model_generator.create_model(seq_len))
-X_train = input_encoder.encode_X(sequences_train, seq_len)
+X_train_1 = input_encoder.encode_X(sequences_train[:2444], seq_len)
+X_train_2 = input_encoder.encode_X(sequences_train[2444:], seq_len)
 X_test = input_encoder.encode_X(sequences_test, seq_len)
 
 
-train_embedding, train_global_embedding = model.predict(X_train, 32)
-with open('train_embedding', 'wb') as f:
-    pickle.dump(train_embedding, f)
+# train_embedding, train_global_embedding = model.predict(X_train, 32)
+train_global_embedding_1 = model.predict(X_train_1, 32)[1]
+train_global_embedding_2 = model.predict(X_train_2, 32)[1]
+train_global_embedding = np.vstack((train_global_embedding_1,train_global_embedding_2))
+
+# with open('train_embedding', 'wb') as f:
+#    pickle.dump(train_embedding, f)
 
 with open('train_global_embedding', 'wb') as f:
     pickle.dump(train_global_embedding, f)
-test_embedding, test_global_embedding = model.predict(X_test, 32)
+# test_embedding, test_global_embedding = model.predict(X_test, 32)
+# test_global_embedding = model.predict(X_test, 32)[1]
+# with open('test_embedding', 'wb') as f:
+#    pickle.dump(test_embedding, f)
 
-with open('test_embedding', 'wb') as f:
-    pickle.dump(test_embedding, f)
+#with open('test_global_embedding', 'wb') as f:
+#    pickle.dump(test_global_embedding, f)
 
-with open('test_global_embedding', 'wb') as f:
-    pickle.dump(test_global_embedding, f)
-
-
+'''
 """### legacy"""
 
 # import biovec
@@ -243,3 +248,4 @@ with open('proteinBert_finetuning_log_loss_refit_full.csv', 'w') as csvfile:
         lst = y_pred_proba[i, :].tolist()
         lst.insert(0, protein)
         writer.writerow(lst)
+'''

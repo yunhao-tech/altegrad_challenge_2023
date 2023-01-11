@@ -48,10 +48,8 @@ with open('./embedding/train_global_embedding', 'rb') as f:
 with open('./embedding/test_global_embedding', 'rb') as f:
     X_test_sequencial_embedding = pickle.load(f)
 
-with open('./embedding/train_structrual_embedding', 'rb') as f:
-    X_train_structrual_embedding= pickle.load(f)
-with open('./embedding/test_structrual_embedding', 'rb') as f:
-    X_test_structrual_embedding= pickle.load(f)
+X_train_structrual_embedding= np.load('./embedding/train_structrual_embedding.npy')
+X_test_structrual_embedding= np.load('./embedding/test_structrual_embedding.npy')
 
 X_train = np.concatenate((X_train_sequencial_embedding, X_train_structrual_embedding), axis=1)
 X_test = np.concatenate((X_test_sequencial_embedding, X_test_structrual_embedding), axis=1)
@@ -79,9 +77,28 @@ df_train['class'] = y_train
 """### automl"""
 
 predictor = TabularPredictor(
-    label='class', eval_metric='log_loss').fit(df_train)
+    label='class', eval_metric='log_loss').fit(df_train, presets='best_quality')
 
 print(predictor.leaderboard())
+
+predict_proba = predictor.predict_proba(df_test)
+
+y_pred_proba = predict_proba.to_numpy()
+
+"""### write"""
+
+with open('proteinBert_pretrained_300_dim_automl_log_loss.csv', 'w') as csvfile:
+    writer = csv.writer(csvfile, delimiter=',')
+    lst = list()
+    for i in range(18):
+        lst.append('class'+str(i))
+    lst.insert(0, "name")
+    writer.writerow(lst)
+    for i, protein in enumerate(proteins_test):
+        lst = y_pred_proba[i, :].tolist()
+        lst.insert(0, protein)
+        writer.writerow(lst)
+
 
 predictor.refit_full(model='best', set_best_to_refit_full=True)
 
