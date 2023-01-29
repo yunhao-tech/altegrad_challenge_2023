@@ -1,6 +1,6 @@
-# [ALTeGrad Challenge 2022 Cellular Component Ontology](https://kaggle.com/competitions/altegrad-2022)
+# [ALTeGrad Challenge 2022-2023 Cellular Component Ontology](https://kaggle.com/competitions/altegrad-2022)
 
-Repo of team: 朊（Ruan）
+Kaggle team: 朊（Ruan). Other team members: [alephpi](https://github.com/alephpi), [yangzhang33](https://github.com/yangzhang33).
 
 ## data description
 
